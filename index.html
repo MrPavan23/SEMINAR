@@ -1,240 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APPGCET2025 Computer Science Syllabus</title>
+    <title>DBMS Seminar: Backup & Recovery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+        /* CSS Custom Properties for easy theming */
+        :root {
+            --primary: #1a237e;
+            --primary-light: #534bae;
+            --primary-dark: #000051;
+            --secondary: #ff6f00;
+            --secondary-light: #ff9f40;
+            --secondary-dark: #c43e00;
+            --text-light: #f5f5f5;
+            --text-dark: #212121;
+            --bg-light: #ffffff;
+            --bg-dark: #121212;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.2);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        /* Base Styles */
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #1a237e, #311b92, #4a148c);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        /* Container */
         .container {
-            max-width: 1000px;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
         }
-        h1 {
-            color: #2c3e50;
+
+        /* Header */
+        header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
+            margin-bottom: 2rem;
+            color: var(--text-light);
         }
-        h2 {
-            color: #3498db;
-            margin-top: 30px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #eee;
+
+        .logo {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
         }
-        h3 {
-            color: #2c3e50;
-            margin-top: 20px;
+
+        h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            line-height: 1.2;
         }
-        .topic {
-            background-color: #f2fbff;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #3498db;
-            border-radius: 4px;
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            opacity: 0.9;
+            margin-bottom: 1rem;
         }
-        .topics-list {
-            margin-left: 20px;
-            font-size: 0.95em;
-            color: #555;
+
+        /* Main Content */
+        .main-content {
+            background: var(--bg-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
         }
-        .btn {
-            display: inline-block;
-            background-color: #3498db;
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .duration-option {
+            background: linear-gradient(145deg, var(--primary), var(--primary-light));
+            color: var(--text-light);
+            border: none;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+            text-align: center;
+        }
+
+        .duration-option:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(145deg, var(--primary-light), var(--primary));
+        }
+
+        .duration-option:active {
+            transform: translateY(0);
+        }
+
+        .duration-option i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .content-box {
+            background-color: var(--bg-light);
+            max-width: 900px;
+            margin: 2rem auto;
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--error);
+            color: var(--text-light);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            background: var(--secondary);
+            transform: rotate(90deg);
+        }
+
+        .content-header {
             color: white;
-            padding: 8px 15px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--secondary);
+            font-size: clamp(1.4rem, 3vw, 2rem);
         }
-        .btn:hover {
-            background-color: #2980b9;
+
+        .content-body {
+            text-align: left;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-dark);
         }
+
+        .content-placeholder {
+            background-color: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 5px solid var(--primary);
+            margin: 1.5rem 0;
+            font-size: 1.2rem;
+            color: #555;
+            text-align: center;
+        }
+
+        /* Footer */
         footer {
             text-align: center;
-            margin-top: 40px;
-            color: #7f8c8d;
-            font-size: 0.9em;
+            color: var(--text-light);
+            padding: 1.5rem;
+            margin-top: auto;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        /* Tablets */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .duration-option {
+                min-height: 120px;
+                padding: 1.2rem;
+                font-size: 1.2rem;
+            }
+
+            .content-box {
+                padding: 1.5rem;
+                margin: 1rem auto;
+            }
+        }
+
+        /* Mobile Phones */
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 0.5rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+                border-radius: 10px;
+            }
+
+            .duration-option {
+                min-height: 100px;
+                padding: 1rem;
+                font-size: 1.1rem;
+            }
+
+            .duration-option i {
+                font-size: 1.7rem;
+            }
+
+            .content-box {
+                padding: 1.5rem;
+                margin: 0.5rem auto;
+            }
+
+            .close-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Large Screens */
+        @media (min-width: 1200px) {
+            .options-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .overlay {
+                display: block !important;
+                position: static;
+                background: white;
+                padding: 0;
+            }
+
+            .content-box {
+                box-shadow: none;
+                margin: 0;
+            }
+
+            .close-btn,
+            .duration-option,
+            footer {
+                display: none;
+            }
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            :root {
+                --primary: #000000;
+                --secondary: #ffffff;
+                --text-light: #ffffff;
+                --text-dark: #000000;
+                --bg-light: #ffffff;
+                --bg-dark: #000000;
+            }
+
+            .duration-option {
+                border: 2px solid white;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-light: #e0e0e0;
+                --text-dark: #f5f5f5;
+                --bg-light: #1e1e1e;
+                --bg-dark: #121212;
+            }
+
+            .content-placeholder {
+                background-color: #2a2a2a;
+                color: #cccccc;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>APPGCET2025 Computer Science Syllabus</h1>
-        
-        <section id="pc-software">
-            <h2>1. PC Software and Programming in 'C'</h2>
-            
-            <div class="topic">
-                <h3>Development of computers and types</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Logical organization of Digital Computers, Memory, Main Memory, RAM and Cache, I/O Units, Secondary Memory, Operating Systems, DOS Commands, Windows 98 and Windows 2000 concepts, Windows Explorer, Working with files and folders, Running Programs, Using Recycle Bin.</p>
-                    <a href="https://chatgpt.com/share/68416a3f-1630-800b-bea4-2e959e1a35c5" class="btn">Open Link</a>
-                </div>
+        <header>
+            <div class="logo">
+                <i class="fas fa-database"></i>
             </div>
-            
-            <div class="topic">
-                <h3>Microsoft Office</h3>
-                <div class="topics-list">
-                    <p>Topics covered: MS Word Basics, Headers, Footers, Tables, Graphics, Templates, Macros, Mail Merge. Power Point Basics, Creating presentations, Menus, Tool Bar, Opening a presentation, Creating New Slide, Deleting a Slide, Copying a Slide, Slide Numbering, Saving, Closing, Printing.</p>
-                    <a href="https://chatgpt.com/share/68416bc7-fca0-800b-953e-6d6e0da63f42" class="btn">Open Link</a>
-                </div>
+            <h1>DBMS Seminar</h1>
+            <p class="subtitle">Advantages of DBMS: Providing Backup and Recovery</p>
+        </header>
+
+        <main class="main-content">
+            <p style="text-align: center; margin-bottom: 1rem; font-size: 1.1rem;">
+                Select your preferred seminar duration to view the content
+            </p>
+
+            <div class="options-grid">
+                <button class="duration-option" data-duration="5">
+                    <i class="far fa-clock"></i>
+                    <span>5 Minutes Seminar</span>
+                    <small>Quick Overview</small>
+                </button>
+                <button class="duration-option" data-duration="10">
+                    <i class="far fa-clock"></i>
+                    <span>10 Minutes Seminar</span>
+                    <small>Standard Presentation</small>
+                </button>
+                <button class="duration-option" data-duration="15">
+                    <i class="far fa-clock"></i>
+                    <span>15 Minutes Seminar</span>
+                    <small>Detailed Analysis</small>
+                </button>
             </div>
-            
-            <div class="topic">
-                <h3>MS Excel</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Work Sheets, Formatting, Functions, Charts, Graphical, Worksheets as Databases, Linking.</p>
-                    <a href="https://chatgpt.com/share/68416e1d-9c70-800c-858e-fe07e53f1f2c" class="btn">Open Link</a>
-                </div>
+        </main>
+    </div>
+
+    <!-- Overlay for 5-minute seminar -->
+    <div class="overlay" id="overlay-5">
+        <div class="content-box">
+            <button class="close-btn" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="content-header">5-Minute Seminar: DBMS Backup & Recovery</h2>
+            <div class="content-body">
+                <h3>Topic: Advantages of DBMS — Providing Backup and Recovery</h3>
+
+                <br>
+
+                <h3>1. Introduction</h3>
+
+                <p>A Database Management System (DBMS) is software that enables users to store, organize, and manage
+                    data
+                    efficiently. It acts as an interface between users and the database, ensuring data is consistent,
+                    secure, and recoverable.
+                </p>
+                <br>
+
+                <h3>2. Key Advantages of DBMS</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><u>Data Integrity and Consistency:</u> Enforces rules to maintain accurate data.</li>
+                        <li><u>Reduced Data Redundancy:</u> Centralized storage avoids duplicate data.</li>
+                        <li><u>Data Security:</u> Role-based access control ensures only authorized users can view or modify data.</li>
+                        <li><u>Data Independence:</u> Structural changes don't affect application programs.</li>
+                        <li><u>Efficient Data Retrieval:</u> Optimized query processing for faster results.</li>
+                        <li><u>Concurrent Access:</u> Allows multiple users to access data simultaneously.</li>
+                        <li><u>Backup and Recovery:</u> Ensures data is not permanently lost after system crashes.</li>
+                        <li><u>Standardization:</u> Uses SQL for uniform data operations.</li>
+                    </ul>
+                <br>
+
+                <h3>3. Backup and Recovery</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><u>Backup:</u> Process of creating periodic copies of data to prevent loss.</li>
+                        <li><u>Recovery:</u> Restores data from backup files to a consistent state after a crash.</li>
+                        <li><u>DBMS Tools:</u> Log files, checkpoints, and transaction management help achieve recovery.</li>
+                    </ul>
+                <br>
+
+                <h3>4. Conclusion</h3>
+                <p>DBMS provides not just data organization, but also reliability, scalability, and protection against
+                    data loss vital for any organization.</p>
             </div>
-            
-            <div class="topic">
-                <h3>Introduction to C</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Data Types, Flow of Control, Functions, Storage Classes, Arrays, Pointers and Strings.</p>
-                    <a href="https://chatgpt.com/share/68416fe4-c168-800c-b6b0-f75a86195678" class="btn">Open Link</a>
-                </div>
+        </div>
+    </div>
+
+    <!-- Overlay for 10-minute seminar -->
+    <div class="overlay" id="overlay-10">
+        <div class="content-box">
+            <button class="close-btn" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="content-header">10-Minute Seminar: DBMS Backup & Recovery</h2>
+            <div class="content-body">
+                <h3>Topic: Advantages of DBMS — Providing Backup and Recovery</h3>
+
+                <h3>1. Introduction</h3>
+                <p>In older file-based systems, managing data was manual and error-prone. A DBMS solved these problems by introducing structured, centralized, and secure data management.</p>
+                <br>
+
+                <h3>2. Major Advantages of DBMS</h3>
+                <ul style="margin-left: 20px;">
+                    <li><u>Reduced Data Redundancy:</u> Data is stored once and reused, saving space.</li>
+                    <li><u>Data Consistency:</u> Updates made in one place reflect everywhere.</li>
+                    <li><u>Data Integrity:</u> Constraints ensure valid, accurate entries.</li>
+                    <li><u>Data Security:</u> Authentication and encryption protect data.</li>
+                    <li><u>Data Independence:</u> Physical storage changes don't affect logical design.</li>
+                    <li><u>Efficient Data Access:</u> Query optimizers and indexes improve performance.</li>
+                    <li><u>Concurrency Control:</u> Multiple users can access data without conflicts.</li>
+                    <li><u>Backup and Recovery:</u> Automatic data restoration ensures fault tolerance.</li>
+                    <li><u>Improved Data Sharing:</u> Centralized data supports collaboration.</li>
+                    <li><u>Reduced Maintenance Cost:</u> Centralized management simplifies updates.</li>
+                </ul>
+                <br>
+
+                <h3>3. Backup and Recovery in Detail</h3>
+                <ul style="margin-left: 20px;">
+                    <li><u>Backup:</u> A copy of database data used for restoration.
+                        <ul style="margin-left: 20px;">
+                            <li><u>Full Backup:</u> Complete copy of the database.</li>
+                            <li><u>Incremental Backup:</u> Saves only changed data since the last backup.</li>
+                            <li><u>Differential Backup:</u> Stores changes since the last full backup.</li>
+                        </ul>
+                    </li>
+                    <li><u>Recovery:</u> Restores database consistency using:
+                        <ul style="margin-left: 20px;">
+                            <li>Transaction Logs to track changes</li>
+                            <li>Checkpoints to mark safe recovery points</li>
+                            <li>Rollback & Rollforward to undo or redo transactions</li>
+                        </ul>
+                    </li>
+                    <li><u>DBMS Example:</u> Oracle uses Redo Logs and Archive Logs for recovery.</li>
+                </ul>
+                <br>
+
+                <h3>4. Example</h3>
+                <p>In a hospital database, if the system crashes during a patient update, DBMS uses logs to roll back
+                    uncommitted data and preserve integrity.</p>
+                <br>
+
+                <h3>5. Conclusion</h3>
+                <p>DBMS enhances performance, consistency, and reliability — ensuring data remains safe even after
+                    failures.</p>
             </div>
-            
-            <div class="topic">
-                <h3>Bitwise Operators and Enumeration types</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Preprocessor, Structures and unions, Structures and list processing, Input/output and Operating Systems.</p>
-                    <a href="https://chatgpt.com/share/684170f9-9c3c-8001-9d25-c3b00272f9d8" class="btn">Open Link</a>
-                </div>
+        </div>
+    </div>
+
+    <!-- Overlay for 15-minute seminar -->
+    <div class="overlay" id="overlay-15">
+        <div class="content-box">
+            <button class="close-btn" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="content-header">15-Minute Seminar: DBMS Backup & Recovery</h2>
+            <div class="content-body">
+                <h3>Topic: Advantages of DBMS — Providing Backup and Recovery</h3>
+                <br>
+
+                <h3>1. Introduction</h3>
+                <p>Data is one of the most critical assets for modern organizations. Before DBMSs, data was stored in independent files, leading to redundancy, inconsistency, and lack
+                    of control. A DBMS centralizes data management, providing security, consistency, and disaster recovery.</p>
+                <br>
+
+                <h3>2. Detailed Advantages of DBMS</h3>
+                <ul style="margin-left: 20px;">
+                    <li><u>Reduced Data Redundancy:</u> Eliminates duplicate storage by maintaining centralized databases.</li>
+                    <li><u>Data Integrity and Consistency:</u> Ensures that data remains accurate across multiple applications using integrity constraints.</li>
+                    <li><u>Data Security:</u>
+                        <ul style="margin-left: 20px;">
+                            <li>Access control (e.g., GRANT/REVOKE in SQL)</li>
+                            <li>Encryption to secure sensitive data</li>
+                        </ul>
+                    </li>
+                    <li><u>Data Independence:</u> Changes in file structure don't require application modification.</li>
+                    <li><u>Efficient Query Processing:</u>
+                        <ul style="margin-left: 20px;">
+                            <li>Query optimization and indexing improve speed</li>
+                            <li>SQL enables standardized access</li>
+                        </ul>
+                    </li>
+                    <li><u>Concurrency Control:</u> Manages simultaneous operations through transactions and locking mechanisms.</li>
+                    <li><u>Backup and Recovery:</u> Protects data from loss or corruption due to hardware failure or system crash.</li>
+                    <li><u>Improved Data Sharing and Collaboration:</u> Multiple users or departments can access the same data securely.</li>
+                    <li><u>Standardization and Data Portability:</u> Follows ANSI SQL standards, making integration with other systems easier.</li>
+                    <li><u>Reduced Application Development Time:</u> Common database services reduce programming effort.</li>
+                    <li><u>Support for Distributed Databases:</u> Modern DBMSs handle replication and partitioning for global systems.</li>
+                </ul>
+                <br>
+
+                <h3>3. Backup and Recovery Explained</h3>
+                <ul style="margin-left: 20px;">
+                    <li><u>Backup:</u> Copying the database at scheduled intervals.
+                        <ul style="margin-left: 20px;">
+                            <li><u>Full Backup:</u> Entire database snapshot.</li>
+                            <li><u>Incremental:</u> Only changes since the last backup.</li>
+                            <li><u>Differential:</u> All changes since the last full backup.</li>
+                            <li><u>Hot Backup:</u> Performed while the DBMS is running.</li>
+                            <li><u>Cold Backup:</u> Taken when the database is offline.</li>
+                        </ul>
+                    </li>
+                    <li><u>Recovery:</u> The process of restoring the database after a crash or data corruption.
+                        <ul style="margin-left: 20px;">
+                            <li><u>Techniques Used:</u>
+                                <ul style="margin-left: 20px;">
+                                    <li>Log-based recovery: Uses transaction logs to restore consistent state.</li>
+                                    <li>Shadow Paging: Maintains old and new copies of pages.</li>
+                                    <li>Checkpointing: Saves stable states periodically for faster recovery.</li>
+                                </ul>
+                            </li>
+                            <li><u>Types of Failures:</u>
+                                <ul style="margin-left: 20px;">
+                                    <li>Transaction failure</li>
+                                    <li>System crash</li>
+                                    <li>Media failure</li>
+                                    <li>Natural disaster</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <br>
+
+                <h3>4. Example Scenarios</h3>
+                <ul style="margin-left: 20px;">
+                    <li><u>Banking System:</u> Transaction logs ensure that all completed transactions are redone after a crash.</li>
+                    <li><u>E-commerce Platform:</u> Recovery ensures order data isn't lost during payment processing.</li>
+                    <li><u>University Database:</u> Daily backups prevent student records from being lost during server maintenance.</li>
+                </ul>
+                <br>
+
+                <h3>5. Real-world Relevance</h3>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Commercial DBMSs</strong>
+                        <ul style="margin-left: 20px;">
+                            <li><u>Oracle Database:</u> Uses redo/undo logs and automatic recovery manager (RMAN).</li>
+                            <li><u>MySQL:</u> Binary logs for incremental recovery.</li>
+                            <li><u>PostgreSQL:</u> Write-Ahead Logging (WAL) ensures durability.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cloud DBMS</strong>
+                        <ul style="margin-left: 20px;">
+                            <li>AWS RDS, Azure SQL, and Google Cloud SQL automate daily backups and cross-region recovery.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <br>
+
+                <h3>6. Conclusion</h3>
+                <p>DBMS technology ensures data reliability, consistency, and availability — even in the face of
+                    failures. By offering robust backup and recovery systems, it protects organizations from data loss and
+                    maintains trust in digital operations. Hence, a well-implemented DBMS isn't just a data storage tool; it's the foundation of modern
+                    data-driven decision-making.</p>
+                <br>
             </div>
-        </section>
-        
-        <section id="oop-ds">
-            <h2>2. Object Oriented Programming and Data Structures</h2>
-            
-            <div class="topic">
-                <h3>Fundamentals of Object Oriented Programming</h3>
-                <div class="topics-list">
-                    <p>Topics covered: History and Evolution of object oriented programming Constants, Variables and Data Types, Comparing Java with C++ Operators and expressions, Decision making using branching and looping, Functions and Procedures.</p>
-                    <a href="https://chatgpt.com/share/68417221-a7ec-8001-b188-e32ecd727fdf" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Java evolution</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Java Programming, Constants, Variables and data types, class, objects and methods, Pointers and Arrays, Binding Data and Functions, Functions and Operator Overloading.</p>
-                    <a href="https://chatgpt.com/share/68417361-9adc-8012-9c36-4e50420580b0" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Reusing Classes</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Managing errors and Exceptions, Virtual Functions and Polymorphism. Data Structures: Stacks, Queues, Binary trees, Graphs.</p>
-                    <a href="https://chatgpt.com/share/684174a8-49ac-8012-bdd7-ec6be4a4c13b" class="btn">Open Link</a>
-                </div>
-            </div>
-        </section>
-        
-        <section id="dbms">
-            <h2>3. Modern DBMS</h2>
-            
-            <div class="topic">
-                <h3>Database Management</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Basic concepts and definitions, file processing systems, the Range of Database applications, Advantage of the Database approach, Costs and Risk of the Database approach, Components of the Database Environment.</p>
-                    <a href="https://chatgpt.com/share/684175ec-a8a4-8010-8961-2a8c9da0d24d" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Data development Process</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Database development within information system development, Database development process, Three Scheme Architecture for database development, Three Tiered Database Location Architecture.</p>
-                    <a href="https://chatgpt.com/share/68417709-4994-8010-b605-f463039e5d57" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Modeling Data in the Organization</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Modeling the rules of the organization, The ER model Entity, Relationship Model Constructs, Relationships. Enhanced E.R. Model and Business Rules: Representing super types and subtypes, Specifying Constraints in super type/subtype relations.</p>
-                    <a href="https://chatgpt.com/share/6841782d-dc18-8013-9b10-ad91453e426b" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Logical Database design and the relational Model</h3>
-                <div class="topics-list">
-                    <p>Topics covered: The Relational data model, Integrity constraints, Transforming EEK diagrams into relations, Introduction to normalization. The basic normal forms, Merging relations.</p>
-                    <a href="https://chatgpt.com/share/684179ca-f4c4-8013-bed4-941a565830d1" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Advanced Normal forms</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Boyce-Codd normal form, Fourth normal form, Higher normal forms, Physical Database design and performance: Physical Database design process, Designing folds, Designing Physical records and denormalization, Designing Physical files, Using and selecting indexes, Designing Databases, optimizing for query performance The SQL Environment defining a database in SQL, Inserting, updating and deleting data internal scheme definitions in RDBMS, Processing single Tables.</p>
-                    <a href="https://chatgpt.com/share/68417ae5-2a14-800d-b810-da863bf115ce" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>Advanced SQL</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Processing Multiple tables, Ensuring transaction integrity, Data dictionary facilities, SQL 99enhancements and Extension to SQL, Triggers and Routines, Embedded SQL and Dynamic SQL.</p>
-                    <a href="https://chatgpt.com/share/68417bd7-7eac-800d-a989-9d886f7f9e44" class="btn">Open Link</a>
-                </div>
-            </div>
-            
-            <div class="topic">
-                <h3>The Client/Server Database Environment</h3>
-                <div class="topics-list">
-                    <p>Topics covered: Client/server Architecture, three tier architecture, Partitioning, Application, Role of the mainframe using parallel computer architecture, using Middle wave establishing client/server security, Client/server issues Data and database administration: The roles of data and database administration, Modeling Enterprise data, planning for databases, Managing data security, Backing of databases, Controlling concurrent access, Managing data quality, Data dictionaries and repositories, Overview of turning the database for performance.</p>
-                    <a href="https://chatgpt.com/share/68417c9f-3b24-800a-a75a-15e984615445" class="btn">Open Link</a>
-                </div>
-            </div>
-        </section>
-        
-        <footer>
-            <p>APPGCET2025 Computer Science Syllabus - Last updated: June 2024</p>
-        </footer>
+        </div>
     </div>
 
     <script>
-        // You can add JavaScript functionality here if needed
-        // For example, to update all links at once:
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // This is where you can programmatically update all links
-            // For now, they're set to "#" as placeholders
-            
-            // Example of how to update a specific link:
-            // document.querySelector('#pc-software .topic:nth-child(1) .btn').href = "your-link-here";
-            
-            // You can also add click handlers if needed
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    if(this.href === '#') {
-                        e.preventDefault();
-                        alert('Link will be updated soon');
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get all duration option buttons
+            const durationButtons = document.querySelectorAll('.duration-option');
+
+            // Get all overlay elements
+            const overlays = document.querySelectorAll('.overlay');
+
+            // Get all close buttons
+            const closeButtons = document.querySelectorAll('.close-btn');
+
+            // Add click event to each duration button
+            durationButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const duration = this.getAttribute('data-duration');
+                    const overlay = document.getElementById(`overlay-${duration}`);
+
+                    // Show the corresponding overlay
+                    if (overlay) {
+                        overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden'; // Prevent scrolling
+                    }
+                });
+            });
+
+            // Add click event to each close button
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Hide all overlays
+                    overlays.forEach(overlay => {
+                        overlay.style.display = 'none';
+                    });
+                    document.body.style.overflow = 'auto'; // Re-enable scrolling
+                });
+            });
+
+            // Close overlay when clicking outside the content box
+            overlays.forEach(overlay => {
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = 'auto'; // Re-enable scrolling
+                    }
+                });
+            });
+
+            // Close overlay with Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    overlays.forEach(overlay => {
+                        overlay.style.display = 'none';
+                    });
+                    document.body.style.overflow = 'auto'; // Re-enable scrolling
+                }
+            });
+
+            // Handle browser resize for better responsiveness
+            window.addEventListener('resize', function () {
+                // Adjust any layout issues on resize
+                overlays.forEach(overlay => {
+                    if (overlay.style.display === 'block') {
+                        // Ensure overlay content is properly centered
+                        const contentBox = overlay.querySelector('.content-box');
+                        if (contentBox) {
+                            contentBox.style.marginTop = '2rem';
+                        }
                     }
                 });
             });
         });
     </script>
 </body>
+
 </html>
