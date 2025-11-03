@@ -1,1 +1,1 @@
-# APPGCET
+# SEMINAR
